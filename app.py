@@ -1,5 +1,5 @@
-from flask import Flask, render_template
-import Ceaser_Cypher
+from flask import Flask, jsonify, render_template, request
+from Ceaser_Cypher import Ceaser_Cypher
 
 app = Flask(__name__, template_folder = 'templates')
 
@@ -7,7 +7,7 @@ app = Flask(__name__, template_folder = 'templates')
 def Home():
     return render_template('Home.html')
 
-@app.route('/encryt', methods = ['POST'])
+@app.route('/encrypt', methods = ['POST'])
 def encrypt():
     data = request.get_json()
     if not data or 'text' not in data:
