@@ -1,7 +1,9 @@
+import random 
+
 def Ceaser_Cypher(A):
 
-    Shift_value_1 = 21
-    Shift_value_2 = 139
+    Shift_value_1 = random.randint(0, 25)
+    Shift_value_2 = random.randint(0, 255)
 
     Encrypted_text = ""
 
@@ -14,7 +16,7 @@ def Ceaser_Cypher(A):
         else:
             Encrypted_text = Encrypted_text + chr((ord(char) + Shift_value_2) % 256)
 
-    print(Encrypted_text)
+    return Encrypted_text, \Shift_value_1, Shift_value_2
 
 
 if __name__ == "__main__":
