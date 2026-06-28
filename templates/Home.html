@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cipher Text Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #e8edf5;
+            --glass-bg: rgba(255, 255, 255, 0.35);
+            --glass-border: rgba(255, 255, 255, 0.50);
+            --glass-shadow: rgba(31, 38, 135, 0.15);
+            --text-primary: #1e1e2f;
+            --text-secondary: #3d3d5c;
+            --text-muted: #5a5a7a;
+            --accent: #6c5ce7;
+            --accent-hover: #5a4bd1;
+            --accent-glow: rgba(108, 92, 231, 0.30);
+            --input-bg: rgba(255, 255, 255, 0.55);
+            --input-border: rgba(255, 255, 255, 0.60);
+            --output-bg: rgba(255, 255, 255, 0.25);
+            --btn-text: #ffffff;
+            --copy-bg: rgba(255, 255, 255, 0.40);
+            --copy-hover: rgba(255, 255, 255, 0.60);
+            --copy-text: #1e1e2f;
+            --badge-bg: rgba(108, 92, 231, 0.15);
+            --badge-text: #6c5ce7;
+            --transition: 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --radius: 20px;
+            --radius-sm: 12px;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f0e1a;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-shadow: rgba(0, 0, 0, 0.50);
+            --text-primary: #f0f0ff;
+            --text-secondary: #c8c8e0;
+            --text-muted: #9898b8;
+            --accent: #a29bfe;
+            --accent-hover: #8c85f0;
+            --accent-glow: rgba(162, 155, 254, 0.25);
+            --input-bg: rgba(255, 255, 255, 0.06);
+            --input-border: rgba(255, 255, 255, 0.10);
+            --output-bg: rgba(255, 255, 255, 0.04);
+            --btn-text: #0f0e1a;
+            --copy-bg: rgba(255, 255, 255, 0.08);
+            --copy-hover: rgba(255, 255, 255, 0.16);
+            --copy-text: #f0f0ff;
+            --badge-bg: rgba(162, 155, 254, 0.15);
+            --badge-text: #a29bfe;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            transition: background var(--transition), color var(--transition);
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(108, 92, 231, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(108, 92, 231, 0.06) 0%, transparent 60%);
+            background-attachment: fixed;
+        }
+
+        [data-theme="dark"] body {
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(162, 155, 254, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(162, 155, 254, 0.06) 0%, transparent 60%);
+        }
+
+        .glass-card {
+            width: 100%;
+            max-width: 720px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px) saturate(1.4);
+            -webkit-backdrop-filter: blur(24px) saturate(1.4);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 40px 36px 44px;
+            box-shadow: 0 8px 40px var(--glass-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.20);
+            transition: background var(--transition), border var(--transition), box-shadow var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            background: radial-gradient(ellipse at 20% 20%, rgba(255, 255, 255, 0.10) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .header-title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0;
+            color: var(--text-primary);
+        }
+
+        .header-title span {
+            color: var(--accent);
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 40px;
+            padding: 6px 8px 6px 14px;
+            cursor: pointer;
+            transition: box-shadow var(--transition);
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle:hover {
+            box-shadow: 0 4px 16px var(--glass-shadow);
+        }
+
+        .theme-toggle-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .toggle-track {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: var(--text-muted);
+            border-radius: 40px;
+            transition: background var(--transition);
+            flex-shrink: 0;
+        }
+
+        .toggle-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform var(--transition), background var(--transition);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] .toggle-track {
+            background: var(--accent);
+        }
+
+        [data-theme="dark"] .toggle-thumb {
+            transform: translateX(20px);
+            background: #0f0e1a;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            letter-spacing: 0;
+            position: relative;
+        }
+
+        .input-label .hint {
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 16px;
+            font-family: 'Inter', Arial, sans-serif;
+            color: var(--text-primary);
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: var(--radius-sm);
+            outline: none;
+            transition: border var(--transition), box-shadow var(--transition);
+            resize: vertical;
+            min-height: 80px;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .text-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        .text-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow), 0 2px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 18px;
+            margin-bottom: 28px;
+            position: relative;
+        }
+
+        .btn-primary,
+        .btn-copy {
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background var(--transition), transform 0.15s, box-shadow var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: 'Inter', Arial, sans-serif;
+        }
+
+        .btn-primary {
+            flex: 1;
+            min-width: 140px;
+            padding: 14px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--btn-text);
+            background: var(--accent);
+            box-shadow: 0 4px 16px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 6px 24px var(--accent-glow);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active,
+        .btn-copy:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary .key-hint {
+            font-weight: 400;
+            font-size: 12px;
+            opacity: 0.7;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 2px 10px;
+            border-radius: 40px;
+        }
+
+        .btn-copy {
+            padding: 14px 24px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--copy-text);
+            background: var(--copy-bg);
+            border: 1px solid var(--glass-border);
+            flex-shrink: 0;
+        }
+
+        .btn-copy:hover {
+            background: var(--copy-hover);
+            box-shadow: 0 4px 16px var(--glass-shadow);
+            transform: translateY(-1px);
+        }
+
+        .output-section {
+            margin-top: 4px;
+            position: relative;
+        }
+
+        .output-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .output-label span {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .output-label .char-count {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .output-display {
+            width: 100%;
+            padding: 18px 22px;
+            min-height: 72px;
+            font-family: 'Inter', monospace;
+            font-size: 17px;
+            font-weight: 500;
+            color: var(--text-primary);
+            background: var(--output-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            word-break: break-word;
+            line-height: 1.7;
+            letter-spacing: 0;
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .output-display .placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+            opacity: 0.6;
+        }
+
+        .shift-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 14px;
+            padding: 8px 18px 8px 16px;
+            background: var(--badge-bg);
+            border-radius: 40px;
+            border: 1px solid var(--glass-border);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--badge-text);
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.4s ease, transform 0.4s ease, background var(--transition), border var(--transition), color var(--transition);
+            pointer-events: none;
+        }
+
+        .shift-badge.hidden-values .shift-value {
+            min-width: 36px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .shift-badge.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .shift-badge .shift-value {
+            background: rgba(255, 255, 255, 0.20);
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-weight: 600;
+        }
+
+        .btn-shift-toggle {
+            width: 34px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--badge-text);
+            background: rgba(255, 255, 255, 0.20);
+            border: 1px solid var(--glass-border);
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background var(--transition), transform 0.15s, box-shadow var(--transition);
+        }
+
+        .btn-shift-toggle:hover {
+            background: rgba(255, 255, 255, 0.34);
+            box-shadow: 0 4px 14px var(--glass-shadow);
+        }
+
+        .btn-shift-toggle:active {
+            transform: scale(0.94);
+        }
+
+        .btn-shift-toggle:focus-visible {
+            outline: 3px solid var(--accent-glow);
+            outline-offset: 2px;
+        }
+
+        .btn-shift-toggle svg {
+            width: 17px;
+            height: 17px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            padding: 12px 28px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            box-shadow: 0 8px 32px var(--glass-shadow);
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 16px;
+            }
+
+            .glass-card {
+                padding: 28px 20px 32px;
+                border-radius: 16px;
+            }
+
+            .header-title {
+                font-size: 18px;
+            }
+
+            .header-icon {
+                font-size: 22px;
+            }
+
+            .theme-toggle-label {
+                display: none;
+            }
+
+            .theme-toggle {
+                padding: 6px 8px;
+            }
+
+            .action-row {
+                flex-direction: column;
+            }
+
+            .btn-primary,
+            .btn-copy {
+                width: 100%;
+            }
+
+            .text-input {
+                font-size: 15px;
+                padding: 14px 16px;
+                min-height: 64px;
+            }
+
+            .output-display {
+                font-size: 15px;
+                padding: 14px 16px;
+                min-height: 60px;
+            }
+
+            .shift-badge {
+                font-size: 12px;
+                padding: 6px 14px 6px 12px;
+                flex-wrap: wrap;
+            }
+
+            .btn-shift-toggle {
+                width: 32px;
+                height: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="glass-card" role="main">
+        <header class="header">
+            <div class="header-left">
+                <span class="header-icon" aria-hidden="true">*</span>
+                <h1 class="header-title">Cipher<span>Text</span></h1>
+            </div>
+            <div class="theme-toggle" id="themeToggle" role="button" tabindex="0" aria-label="Toggle dark mode">
+                <span class="theme-toggle-label" id="themeLabel">Light</span>
+                <div class="toggle-track">
+                    <div class="toggle-thumb"></div>
+                </div>
+            </div>
+        </header>
+
+        <div>
+            <label class="input-label" for="plainInput">
+                Enter your message
+                <span class="hint">- plain text to cipher</span>
+            </label>
+            <textarea
+                class="text-input"
+                id="plainInput"
+                placeholder="Type or paste your text here..."
+                rows="3"
+                spellcheck="true"
+                autofocus
+            ></textarea>
+        </div>
+
+        <div class="action-row">
+            <button class="btn-primary" id="convertBtn" type="button">
+                Convert
+                <span class="key-hint">Enter</span>
+            </button>
+            <button class="btn-copy" id="copyBtn" type="button">
+                <span class="copy-icon" aria-hidden="true">Copy</span>
+            </button>
+        </div>
+
+        <section class="output-section">
+            <div class="output-label">
+                <span>Ciphered Text</span>
+                <span class="char-count" id="charCount">0 characters</span>
+            </div>
+            <div class="output-display" id="outputDisplay">
+                <span class="placeholder">Your ciphered text will appear here...</span>
+            </div>
+            <div class="shift-badge" id="shiftBadge">
+                <span>Shift values used</span>
+                <span class="shift-value" id="shiftValue1">-</span>
+                <span style="opacity:0.4;">/</span>
+                <span class="shift-value" id="shiftValue2">-</span>
+                <button class="btn-shift-toggle" id="shiftToggleBtn" type="button" aria-label="Hide shift values" title="Hide shift values">
+                    <svg id="shiftToggleIcon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <div class="toast" id="toast" role="alert"></div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            const plainInput = document.getElementById('plainInput');
+            const convertBtn = document.getElementById('convertBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const outputDisplay = document.getElementById('outputDisplay');
+            const charCount = document.getElementById('charCount');
+            const shiftBadge = document.getElementById('shiftBadge');
+            const shiftValue1 = document.getElementById('shiftValue1');
+            const shiftValue2 = document.getElementById('shiftValue2');
+            const shiftToggleBtn = document.getElementById('shiftToggleBtn');
+            const shiftToggleIcon = document.getElementById('shiftToggleIcon');
+            const themeToggle = document.getElementById('themeToggle');
+            const themeLabel = document.getElementById('themeLabel');
+            const toast = document.getElementById('toast');
+
+            let toastTimer = null;
+            let currentTheme = 'light';
+            let shiftsVisible = true;
+            let currentShift1 = '-';
+            let currentShift2 = '-';
+
+            function eyeIcon() {
+                return '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path><circle cx="12" cy="12" r="3"></circle>';
+            }
+
+            function eyeOffIcon() {
+                return '<path d="M3 3l18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 5.3A10.8 10.8 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-2.1 3.1"></path><path d="M6.1 6.1C3.4 7.9 2 12 2 12s3.5 7 10 7c1.5 0 2.8-.3 4-.9"></path>';
+            }
+
+            function updateShiftVisibility() {
+                shiftValue1.textContent = shiftsVisible ? currentShift1 : '••';
+                shiftValue2.textContent = shiftsVisible ? currentShift2 : '••';
+                shiftBadge.classList.toggle('hidden-values', !shiftsVisible);
+                shiftToggleIcon.innerHTML = shiftsVisible ? eyeIcon() : eyeOffIcon();
+                shiftToggleBtn.setAttribute('aria-label', shiftsVisible ? 'Hide shift values' : 'Show shift values');
+                shiftToggleBtn.setAttribute('title', shiftsVisible ? 'Hide shift values' : 'Show shift values');
+            }
+
+            // /*/ Render output after Flask returns encrypted text.
+            function renderOutput(encrypted, shift1, shift2) {
+                if (!encrypted || encrypted.trim() === '') {
+                    outputDisplay.innerHTML = '<span class="placeholder">Your ciphered text will appear here...</span>';
+                    charCount.textContent = '0 characters';
+                    shiftBadge.classList.remove('visible');
+                    return;
+                }
+
+                outputDisplay.textContent = encrypted;
+                charCount.textContent = encrypted.length + ' characters';
+                currentShift1 = String(shift1);
+                currentShift2 = String(shift2);
+                updateShiftVisibility();
+                shiftBadge.classList.add('visible');
+            }
+
+            function clearOutput() {
+                outputDisplay.innerHTML = '<span class="placeholder">Your ciphered text will appear here...</span>';
+                charCount.textContent = '0 characters';
+                shiftBadge.classList.remove('visible');
+                currentShift1 = '-';
+                currentShift2 = '-';
+                updateShiftVisibility();
+            }
+
+            // /*/ Send the typed message to the Flask backend.
+            function handleConvert() {
+                const text = plainInput.value;
+
+                if (!text || text.trim() === '') {
+                    clearOutput();
+                    return;
+                }
+
+                outputDisplay.textContent = 'Encrypting...';
+                charCount.textContent = '...';
+
+                fetch('/encrypt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text })
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(errorData => {
+                                throw new Error(errorData.error || 'Server error');
+                            });
+                        }
+
+                        return response.json();
+                    })
+                    .then(data => {
+                        renderOutput(data.encrypted, data.shift1, data.shift2);
+                    })
+                    .catch(error => {
+                        showToast('Warning: ' + error.message);
+                        outputDisplay.innerHTML = '<span class="placeholder">Error - please try again</span>';
+                        charCount.textContent = '0 characters';
+                        shiftBadge.classList.remove('visible');
+                    });
+            }
+
+            function handleCopy() {
+                const text = outputDisplay.textContent;
+
+                if (!text || text === 'Your ciphered text will appear here...' || text.startsWith('Encrypting') || text.startsWith('Error')) {
+                    showToast('Nothing to copy - convert some text first');
+                    return;
+                }
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text)
+                        .then(() => showToast('Copied to clipboard'))
+                        .catch(() => fallbackCopy(text));
+                    return;
+                }
+
+                fallbackCopy(text);
+            }
+
+            function fallbackCopy(text) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                textarea.style.top = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.select();
+
+                try {
+                    document.execCommand('copy');
+                    showToast('Copied to clipboard');
+                } catch (_) {
+                    showToast('Could not copy. Please select and copy manually.');
+                }
+
+                document.body.removeChild(textarea);
+            }
+
+            function showToast(message) {
+                toast.textContent = message;
+                toast.classList.add('show');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2400);
+            }
+
+            function setTheme(theme) {
+                currentTheme = theme;
+                document.documentElement.setAttribute('data-theme', theme);
+                themeLabel.textContent = theme === 'dark' ? 'Dark' : 'Light';
+
+                try {
+                    localStorage.setItem('cipher-theme', theme);
+                } catch (_) {
+                    /* ignore */
+                }
+            }
+
+            function toggleTheme() {
+                setTheme(currentTheme === 'light' ? 'dark' : 'light');
+            }
+
+            function loadTheme() {
+                let saved = 'light';
+
+                try {
+                    const stored = localStorage.getItem('cipher-theme');
+                    if (stored === 'dark' || stored === 'light') {
+                        saved = stored;
+                    }
+                } catch (_) {
+                    /* ignore */
+                }
+
+                if (saved === 'light' && window.matchMedia) {
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+                    if (prefersDark.matches) {
+                        saved = 'dark';
+                    }
+                }
+
+                setTheme(saved);
+            }
+
+            plainInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    handleConvert();
+                }
+            });
+
+            convertBtn.addEventListener('click', handleConvert);
+            copyBtn.addEventListener('click', handleCopy);
+            shiftToggleBtn.addEventListener('click', function () {
+                shiftsVisible = !shiftsVisible;
+                updateShiftVisibility();
+            });
+            themeToggle.addEventListener('click', toggleTheme);
+            themeToggle.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    toggleTheme();
+                }
+            });
+
+            loadTheme();
+        })();
+    </script>
+</body>
+</html>
